@@ -1,0 +1,9 @@
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/OBPointCloud.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/server.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/edit_cache.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/rebuild_cache.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/list_install_components.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/install.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/install/local.dir
+/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/install/strip.dir
