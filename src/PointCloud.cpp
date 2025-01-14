@@ -122,7 +122,7 @@ int main(int argc, char **argv) try {
 
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::pub);
-    socket.bind("tcp://127.0.0.1:5556");
+    socket.connect("tcp://127.0.0.1:5556");
 
     // Parameters for downsampling
     float min_bound[3] = {-300.0f, -300.0f, -300.0f};

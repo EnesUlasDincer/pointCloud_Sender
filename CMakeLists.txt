@@ -9,6 +9,10 @@ find_package(PCL REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(CUDAToolkit REQUIRED)
 
+#export CC=/usr/bin/gcc-11
+#export CXX=/usr/bin/g++-11
+
+
 # Enable OpenMP
 find_package(OpenMP REQUIRED)
 
