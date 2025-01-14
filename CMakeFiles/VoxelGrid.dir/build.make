@@ -1191,10 +1191,10 @@ CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: /usr/lib/gcc/x
 CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h
 CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h
 CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h
-CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o.cmake
+CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o: CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o.Debug.cmake
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building NVCC (Device) object CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o"
 	cd /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src && /usr/bin/cmake -E make_directory /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/.
-	cd /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src && /usr/bin/cmake -D verbose:BOOL=ON -D build_configuration:STRING= -D generated_file:STRING=/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/./VoxelGrid_generated_voxel_grid.cu.o -D generated_cubin_file:STRING=/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/./VoxelGrid_generated_voxel_grid.cu.o.cubin.txt -P /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o.cmake
+	cd /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src && /usr/bin/cmake -D verbose:BOOL=ON -D build_configuration:STRING=Debug -D generated_file:STRING=/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/./VoxelGrid_generated_voxel_grid.cu.o -D generated_cubin_file:STRING=/home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/./VoxelGrid_generated_voxel_grid.cu.o.cubin.txt -P /home/enes/Desktop/PhD/Communication/pointCloud_sender/build/CMakeFiles/VoxelGrid.dir/src/VoxelGrid_generated_voxel_grid.cu.o.Debug.cmake
 
 # Object files for target VoxelGrid
 VoxelGrid_OBJECTS =
