@@ -1,0 +1,91 @@
+// int main(int argc, char **argv) try {
+//     ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
+
+//     // Create two pipelines for two cameras
+//     ob::Pipeline pipeline1, pipeline2;
+
+//     // Create configurations for both cameras
+//     std::shared_ptr<ob::Config> config1 = std::make_shared<ob::Config>();
+//     std::shared_ptr<ob::Config> config2 = std::make_shared<ob::Config>();
+
+//     // Configure streams for each camera
+//     std::shared_ptr<ob::VideoStreamProfile> colorProfile1 = configureColorStream(pipeline1, config1);
+//     std::shared_ptr<ob::VideoStreamProfile> colorProfile2 = configureColorStream(pipeline2, config2);
+
+//     OBAlignMode alignMode = ALIGN_DISABLE;
+
+//     configureDepthStream(pipeline1, colorProfile1, alignMode, config1);
+//     configureDepthStream(pipeline2, colorProfile2, alignMode, config2);
+
+//     // Start pipelines
+//     pipeline1.start(config1);
+//     pipeline2.start(config2);
+
+//     // Create PointCloudFilter objects for both cameras
+//     ob::PointCloudFilter pointCloud1, pointCloud2;
+//     pointCloud1.setCameraParam(pipeline1.getCameraParam());
+//     pointCloud2.setCameraParam(pipeline2.getCameraParam());
+
+//     intro_prompt();
+
+//     // Transformation matrices for both cameras
+//     Eigen::Matrix4f T_camera1_to_robot = Eigen::Matrix4f::Identity();
+//     Eigen::Matrix4f T_camera2_to_robot = Eigen::Matrix4f::Identity();
+
+//     // Path to the file
+//     std::string filePath_T_camera1_to_QR = "/home/enes/Desktop/ORBBEC/Orbbec_Codes/JPG_taker/build/Cam_1_pose_estimation.txt";
+//     std::string filePath_T_camera2_to_QR = "/home/enes/Desktop/ORBBEC/Orbbec_Codes/JPG_taker/build/Cam_2_pose_estimation.txt";
+//     // Read T_camera_to_QR matrix
+//     Eigen::Matrix4f T_camera1_to_robot = readTransformationMatrix(filePath_T_camera1_to_QR);
+//     Eigen::Matrix4f T_camera2_to_robot = readTransformationMatrix(filePath_T_camera2_to_QR);
+
+
+//     while (true) {
+//         // Retrieve frames from both cameras
+//         auto frameset1 = pipeline1.waitForFrames(100);
+//         auto frameset2 = pipeline2.waitForFrames(100);
+
+//         if (InputUtils::kbhit()) {
+//             int key = InputUtils::getch();
+
+//             if (key == KEY_ESC) break;
+
+//             if (key == 'R' || key == 'r') {
+//                 // Process and save RGBD point clouds from both cameras
+//                 auto pointCloudFrame1 = processRGBDPointCloud(pipeline1, pointCloud1);
+//                 auto pointCloudFrame2 = processRGBDPointCloud(pipeline2, pointCloud2);
+
+//                 if (pointCloudFrame1) {
+//                     // Optionally save the frame to a PLY file
+//                     std::vector<OBColorPoint> pointCloudFrame1_points = frameToVector(pointCloudFrame1);
+//                     saveRGBPointsToPly(pointCloudFrame1_points, "GeneratedRGBPoints_Camera1.ply");
+
+//                     auto transformedPoints1 = getTransformedPointCloud2(pointCloudFrame1, T_camera1_to_robot);
+//                     saveRGBPointsToPly(transformedPoints1, "TransformedRGBPoints_Camera1.ply");
+//                 }
+
+//                 if (pointCloudFrame2) {
+//                     // Optionally save the frame to a PLY file
+//                     std::vector<OBColorPoint> pointCloudFrame2_points = frameToVector(pointCloudFrame2);
+//                     saveRGBPointsToPly(pointCloudFrame2_points, "GeneratedRGBPoints_Camera2.ply");
+
+//                     auto transformedPoints2 = getTransformedPointCloud2(pointCloudFrame2, T_camera2_to_robot);
+//                     saveRGBPointsToPly(transformedPoints2, "TransformedRGBPoints_Camera2.ply");
+//                 }
+//             } else if (key == 'D' || key == 'd') {
+//                 processAndSaveDepthPointCloud(pipeline1, pointCloud1);
+//                 processAndSaveDepthPointCloud(pipeline2, pointCloud2);
+//             }
+//         }
+//     }
+
+//     // Stop both pipelines
+//     pipeline1.stop();
+//     pipeline2.stop();
+
+//     return 0;
+// }
+// catch (ob::Error &e) {
+//     std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+//     exit(EXIT_FAILURE);
+// }
