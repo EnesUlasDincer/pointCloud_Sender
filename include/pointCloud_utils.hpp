@@ -35,6 +35,14 @@
 #include <pcl/point_cloud.h>
 #include <pcl/filters/voxel_grid.h>
 
+struct FrameView {
+    OBColorPoint* data;  // Direct pointer to frame data
+    size_t size;         // Number of points
+};
+
+// Return a **non-owning view** of the data
+FrameView frameToPointer(const std::shared_ptr<ob::Frame> &frame);
+
 // Save point cloud data to ply
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName);
 

@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.10)
 project(OBPointCloud)
 
 # Find required packages
-find_package(Eigen3 REQUIRED)
+set(PCL_DIR "/usr/lib/x86_64-linux-gnu/cmake/pcl")
+
+find_package(TBB REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(cppzmq REQUIRED)
-find_package(PCL REQUIRED)  
-find_package(CUDA REQUIRED)
+#find_package(CUDA REQUIRED)
 find_package(CUDAToolkit REQUIRED)
+
 
 #export CC=/usr/bin/gcc-11
 #export CXX=/usr/bin/g++-11
@@ -18,7 +20,7 @@ find_package(CUDAToolkit REQUIRED)
 find_package(OpenMP REQUIRED)
 
 # CUDA configuration
-set(CUDA_NVCC_FLAGS "-arch=compute_86 --expt-relaxed-constexpr" CACHE STRING "nvcc flags" FORCE)
+set(CUDA_NVCC_FLAGS "-arch=compute_75 --expt-relaxed-constexpr" CACHE STRING "nvcc flags" FORCE)
 set(CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
 set(LIB_TYPE STATIC)
 
@@ -29,20 +31,21 @@ cmake_policy(SET CMP0074 NEW)
 set(OrbbecSDK_LIBS_DIR /home/enesud/Desktop/Repos/OrbbecSDK/lib/linux_x64)
 set(OrbbecSDK_INCLUDE /home/enesud/Desktop/Repos/OrbbecSDK/include) # Adjust this path as necessary
 set(OrbbecSDK_INCLUDE_HPP /home/enesud/Desktop/Repos/OrbbecSDK/include/libobsensor/hpp) # Adjust this path as necessary
-
+#set(Eigen_Folder /home/enesud/Desktop/Repos/PhD/Repos/eigen) # Adjust this path as necessary
 
 # Add PCL configuration
-set(PCL_DIR /usr/lib/x86_64-linux-gnu/cmake/pcl)
 find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+link_directories(${PCL_LIBRARY_DIRS})
 message(STATUS "PCL include dirs: ${PCL_INCLUDE_DIRS}")
 message(STATUS "PCL library dirs: ${PCL_LIBRARY_DIRS}")
 
+set(Eigen3_INCLUDE_DIR "/usr/include/eigen3")
+
 # Include directories for Eigen and Orbbec SDK
 include_directories(
-    ${EIGEN3_INCLUDE_DIR}
+    ${Eigen3_INCLUDE_DIR}
     ${OrbbecSDK_INCLUDE}
     ${OrbbecSDK_INCLUDE_HPP}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -50,8 +53,19 @@ include_directories(
     $<INSTALL_INTERFACE:include>
 )
 
-# Build CUDA library for voxel grid
-cuda_add_library(VoxelGrid ${LIB_TYPE} src/voxel_grid.cu)
+set(Eigen3_DIR "")
+set(Eigen3_INCLUDE_DIR "")
+
+# Enable CUDA language
+enable_language(CUDA)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+
+# Add CUDA library
+add_library(VoxelGrid src/voxel_grid.cu)
+
+# Set CUDA standard (optional but recommended)
+set_target_properties(VoxelGrid PROPERTIES CUDA_STANDARD 14 CUDA_STANDARD_REQUIRED ON)
+
 
 # Define the OBPointCloud executable and link with libraries
 add_executable(${PROJECT_NAME}
@@ -65,6 +79,14 @@ target_link_libraries(${PROJECT_NAME}
     ${PCL_LIBRARIES}
     ${OpenCV_LIBS}
     TBB::tbb
+
+    # OpenGL::GL
+    # Qt6::Widgets
+    # Qt6::OpenGL
+    # VTK::CommonCore
+    # VTK::RenderingCore
+
+    
     ${OrbbecSDK_LIBS_DIR}/libOrbbecSDK.so
     ${OrbbecSDK_LIBS_DIR}/libdepthengine.so
     ${OrbbecSDK_LIBS_DIR}/libob_usb.so
@@ -72,6 +94,9 @@ target_link_libraries(${PROJECT_NAME}
     cppzmq
     VoxelGrid
 )
+
+target_link_libraries(${PROJECT_NAME}
+PRIVATE ${CUDA_LIBRARIES})
 
 # Enable OpenMP if available
 if(OpenMP_CXX_FOUND)

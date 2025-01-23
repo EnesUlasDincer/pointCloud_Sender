@@ -84,8 +84,38 @@ uint8_t* serializePointCloudToByteArray(const std::vector<OBColorPoint>& points,
 
 int main(int argc, char **argv) try {
     ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
-    // create pipeline
-    ob::Pipeline pipeline;
+
+    ob::Context ob_context;
+    
+    // Query the list of connected devices
+    auto devList = ob_context.queryDeviceList();
+
+    // ask user to choose the camera
+    std::cout << "Choose the camera (1 or 2): ";
+    int cameraChoice;
+    std::cin >> cameraChoice;
+
+    //auto dev = devList->getDevice(cameraChoice);
+    std::shared_ptr<ob::Device> dev;
+
+    // check the camera serial number if it is CL8A8420179 or CL8A84201GW 
+    // select the correct device
+    // Get the number of connected devices
+    int devCount = devList->deviceCount();
+    for (int i = 0; i < devCount; i++) {
+        // if devList->serialNumber(i) == "CL8A8420179" or "CL8A84201GW"
+        // select the device
+        if (strcmp(devList->serialNumber(i), "CL8A8420179") == 0 && cameraChoice == 1) {
+            dev = devList->getDevice(i);
+        } else if (strcmp(devList->serialNumber(i), "CL8A84201GW") == 0 && cameraChoice == 2) {
+            dev = devList->getDevice(i);
+        }
+    }
+
+    std::cout << "pipeline is initliazed." << std::endl;
+
+    // Create a pipeline with default device
+    ob::Pipeline pipeline(dev);
 
     // Configure which streams to enable or disable for the Pipeline by creating a Config
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
@@ -121,8 +151,16 @@ int main(int argc, char **argv) try {
     // Window app("PointCloud_Viewer", currentProfile->width(), currentProfile->height());
 
     zmq::context_t context(1);
-    zmq::socket_t socket(context, zmq::socket_type::pub);
-    socket.connect("tcp://127.0.0.1:5556");
+    zmq::socket_t socket(context, ZMQ_PUSH);
+    socket.connect("tcp://127.0.0.1:5553");
+
+    // zmq::socket_t receiver(context, ZMQ_PULL);  // 🔹 Add receiver socket
+    // receiver.connect("tcp://127.0.0.1:5543");
+
+    // it was zmq::socket_t socket(context, zmq::socket_type::pub);
+    // it was socket.bind("tcp://127.0.0.1:5556");
+    // zmq::socket_t socket(context, zmq::socket_type::pub);
+    // socket.bind("tcp://127.0.0.1:5556");
 
     // Parameters for downsampling
     float min_bound[3] = {-300.0f, -300.0f, -300.0f};
@@ -139,23 +177,41 @@ int main(int argc, char **argv) try {
 
 
     // Path to the file
-    std::string filePath_T_camera_to_QR = "/home/enes/Desktop/ORBBEC/Orbbec_Codes/JPG_taker/build/Cam_1_pose_estimation.txt";
-    // Read T_camera_to_QR matrix
-    Eigen::Matrix4f T_camera_to_QR = readTransformationMatrix(filePath_T_camera_to_QR);
+    // std::string filePath_T_camera_to_QR = "/home/enes/Desktop/ORBBEC/Orbbec_Codes/JPG_taker/build/Cam_1_pose_estimation.txt";
+    // // Read T_camera_to_QR matrix
+    // Eigen::Matrix4f T_camera_to_QR = readTransformationMatrix(filePath_T_camera_to_QR);
+
+    Eigen::Matrix4f T_camera_to_QR = Eigen::Matrix4f::Identity();
+
     // Print the transformation matrix
     std::cout << "Transformation Matrix (T_camera_to_QR):" << std::endl;
     std::cout << T_camera_to_QR << std::endl;
 
+    T_camera_to_QR(0, 3) *= 1000.0;
+    T_camera_to_QR(1, 3) *= 1000.0;
+    T_camera_to_QR(2, 3) *= 1000.0;
+    
+    // Extract rotation (R) and translation (t)
+    Eigen::Matrix3f R = T_camera_to_QR.block<3,3>(0, 0);
+    Eigen::Vector3f t = T_camera_to_QR.block<3,1>(0, 3);
+
+    // Compute the inverse efficiently
+    Eigen::Matrix4f T_QR_to_camera = Eigen::Matrix4f::Identity();
+    T_QR_to_camera.block<3,3>(0, 0) = R.transpose(); // Transpose of rotation
+    T_QR_to_camera.block<3,1>(0, 3) = -R.transpose() * t; // Negative transformed translation
+
+    
     // Define T_QR_to_robot (replace with actual values)
     Eigen::Matrix4f T_QR_to_robot;
     // Example: Fill in the matrix values here
-    T_QR_to_robot << 1, 0, 0, 0.0,
+    T_QR_to_robot <<  1, 0, 0, 0.0,
                       0, 1, 0, 0.0,
                       0, 0, 1, 0.0,
-                      0, 0, 0, 1;
+                      0, 0, 0, 1.0;
+    
 
     // Compute T_camera_to_robot
-    Eigen::Matrix4f T_camera_to_robot = T_QR_to_robot * T_camera_to_QR;
+    Eigen::Matrix4f T_camera_to_robot = T_QR_to_robot * T_QR_to_camera;
 
     while(true) {
         auto frameset = pipeline.waitForFrames(100);
@@ -163,8 +219,12 @@ int main(int argc, char **argv) try {
         //auto pointCloudFrame_to_render = processRGBDPointCloud(pipeline, pointCloud);
         if(true )
         {
+            // 🔹 Step 1: Wait for Capture Request
+            // zmq::message_t captureSignal;
+            // receiver.recv(captureSignal, zmq::recv_flags::none);
+
             // Process the RGBD point cloud and get the frame
-            auto pointCloudFrame = processRGBDPointCloud(pipeline, pointCloud);
+            std::shared_ptr<ob::Frame> pointCloudFrame = processRGBDPointCloud(pipeline, pointCloud);
          
             //processAndSaveRGBDPointCloud(pipeline, pointCloud);
             if (pointCloudFrame) {
@@ -173,9 +233,11 @@ int main(int argc, char **argv) try {
 
                 auto start_frame_to_vector = std::chrono::high_resolution_clock::now();
                 // Optionally save the frame to a PLY file
-                std::vector<OBColorPoint> pointCloudFrame_points = frameToVector(pointCloudFrame);
+                // std::vector<OBColorPoint> pointCloudFrame_points = frameToVector(pointCloudFrame);
+                FrameView pointCloudFrame_points = frameToPointer(pointCloudFrame);
 
-                float* byteArray = new float[pointCloudFrame_points.size() * 6];
+                // float* byteArray = new float[pointCloudFrame_points.size() * 6];
+                float* byteArray = new float[pointCloudFrame_points.size * 6];
 
                 auto end_frame_to_vector = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> elapsed_frame_to_vector = end_frame_to_vector - start_frame_to_vector;
@@ -186,7 +248,9 @@ int main(int argc, char **argv) try {
                 // std::vector<OBColorPoint> cropped_and_downsampled_points = downsampleToTarget(pointCloudFrame_points, voxelSize, targetCount);
 
                 // Perform voxel grid downsampling
-                uint32_t num_voxels = transformCropAndVoxelizeCenter(pointCloudFrame_points, byteArray, T_camera_to_QR);
+                // uint32_t num_voxels = transformCropAndVoxelizeCenter(pointCloudFrame_points, byteArray, T_camera_to_QR);
+                uint32_t num_voxels = transformCropAndVoxelizeCenter(pointCloudFrame_points.data, pointCloudFrame_points.size, byteArray, T_camera_to_robot);
+
 
                 std::cout << "OUTSIDE; Number of voxels: " << num_voxels << std::endl;
                 // Calculate the size of the byte array to send
@@ -200,7 +264,8 @@ int main(int argc, char **argv) try {
                 // saveRGBPointsToPly(cropped_and_downsampled_points, "downsampled_GeneratedRGBPoints.ply");
         
                 // print the number of points
-                std::cout << "Before crop, Number of points in the frame: " << pointCloudFrame_points.size() << std::endl;
+                // std::cout << "Before crop, Number of points in the frame: " << pointCloudFrame_points.size() << std::endl;
+                std::cout << "Before crop, Number of points in the frame: " << pointCloudFrame_points.size << std::endl;
                 // std::cout << "After crop, Number of points in the frame: " << croppedPoints.size() << std::endl;
                 // std::cout << "After downsample, Number of points in the frame: " << cropped_and_downsampled_points.size() << std::endl;
 
@@ -209,6 +274,8 @@ int main(int argc, char **argv) try {
                 size_t output_byteArraySize = targetCount * 6 * sizeof(float);
                 // Print size of serialized data
                 std::cout << "Size of serialized data: " << output_byteArraySize << " bytes" << std::endl;
+
+                
 
                 // Send the serialized point cloud to the server
                 zmq::message_t request(output_byteArraySize);

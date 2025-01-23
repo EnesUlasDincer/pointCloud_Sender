@@ -78,6 +78,10 @@
         "source_location": "cpp",
         "typeindex": "cpp",
         "__nullptr": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "nnls": "cpp",
+        "adolcforward": "cpp",
+        "__locale": "cpp",
+        "ios": "cpp"
     }
 }

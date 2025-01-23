@@ -1,6 +1,8 @@
 
 #include "../include/pointCloud_utils.hpp"
 
+#include <memory>
+
 // Save point cloud data to ply
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
     int   pointsSize = frame->dataSize() / sizeof(OBPoint);
@@ -112,31 +114,63 @@ std::shared_ptr<ob::VideoStreamProfile> configureColorStream(ob::Pipeline &pipel
     return colorProfile;
 }
 
+
+// Return a **non-owning view** of the data
+FrameView frameToPointer(const std::shared_ptr<ob::Frame> &frame) {
+    if (!frame || frame->dataSize() == 0) {
+        return {nullptr, 0}; // Return an empty view
+    }
+    return {
+        static_cast<OBColorPoint*>(frame->data()),
+        frame->dataSize() / sizeof(OBColorPoint)
+    };
+}
+
+
+
+
 // Convert a std::shared_ptr<ob::Frame> to a std::vector<OBColorPoint>
 std::vector<OBColorPoint> frameToVector(const std::shared_ptr<ob::Frame> &frame) {
-    // Check for null frame
-    if (!frame) {
-        std::cerr << "Invalid frame provided!" << std::endl;
-        return {}; // Return empty vector
+    if (!frame || frame->dataSize() == 0) {
+        return {}; // Return empty vector if frame is null or has no data
     }
 
-    // Calculate the number of points
+    // Get raw data pointer and compute number of points
+    OBColorPoint* rawPoints = static_cast<OBColorPoint*>(frame->data());
     size_t pointsSize = frame->dataSize() / sizeof(OBColorPoint);
-    if (pointsSize == 0) {
-        std::cerr << "No points found in the frame!" << std::endl;
-        return {}; // Return empty vector
-    }
 
-    // Get raw point data
-    auto *rawPoints = static_cast<OBColorPoint *>(frame->data());
-    if (!rawPoints) {
-        std::cerr << "Failed to retrieve point data from frame!" << std::endl;
-        return {}; // Return empty vector
-    }
+    // Fast allocation + memcpy (avoids unnecessary constructor calls)
+    std::vector<OBColorPoint> points(pointsSize);
+    std::memcpy(points.data(), rawPoints, frame->dataSize()); // Copy raw memory block
 
-    // Construct the vector directly
-    return {rawPoints, rawPoints + pointsSize};
+    return points;
 }
+
+// // Convert a std::shared_ptr<ob::Frame> to a std::vector<OBColorPoint>
+// std::vector<OBColorPoint> frameToVector(const std::shared_ptr<ob::Frame> &frame) {
+//     // Check for null frame
+//     if (!frame) {
+//         std::cerr << "Invalid frame provided!" << std::endl;
+//         return {}; // Return empty vector
+//     }
+
+//     // Calculate the number of points
+//     size_t pointsSize = frame->dataSize() / sizeof(OBColorPoint);
+//     if (pointsSize == 0) {
+//         std::cerr << "No points found in the frame!" << std::endl;
+//         return {}; // Return empty vector
+//     }
+
+//     // Get raw point data
+//     auto *rawPoints = static_cast<OBColorPoint *>(frame->data());
+//     if (!rawPoints) {
+//         std::cerr << "Failed to retrieve point data from frame!" << std::endl;
+//         return {}; // Return empty vector
+//     }
+
+//     // Construct the vector directly
+//     return {rawPoints, rawPoints + pointsSize};
+// }
 
 // Function to process and save an RGBD PointCloud to a PLY file
 void processAndSaveRGBDPointCloud(ob::Pipeline &pipeline, ob::PointCloudFilter &pointCloud) {
@@ -177,6 +211,10 @@ std::shared_ptr<ob::Frame> processRGBDPointCloud(ob::Pipeline &pipeline, ob::Poi
             // print the depth scale
             
             pointCloud.setPositionDataScaled(depthValueScale);
+
+            // OBCoordinateSystemType coordinateSystemType = OB_RIGHT_HAND_COORDINATE_SYSTEM;
+
+            pointCloud.setCoordinateSystem(OB_RIGHT_HAND_COORDINATE_SYSTEM); // Set the coordinate system
             
             //pointCloud.setFrameAlignState(true); // Enable frame alignment
 
@@ -305,7 +343,9 @@ std::shared_ptr<ob::StreamProfileList> configureDepthStream(ob::Pipeline &pipeli
                 // Attempt to match the frame rate with the color profile
                 if (colorProfile) {
                     std::cout << "Matching depth frame rate with color profile..." << std::endl;
-                    depthProfile = depthProfileList->getVideoStreamProfile(OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FORMAT_ANY, colorProfile->fps());
+                    //depthProfile = depthProfileList->getVideoStreamProfile(OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FORMAT_ANY, colorProfile->fps());
+                    // Configure the depth stream explicitly
+                    depthProfile = depthProfileList->getVideoStreamProfile(640, 576, OB_FORMAT_Y16, 30);
                 }
             } catch (...) {
                 // Fallback to default profile if no matching frame rate is found
@@ -316,8 +356,7 @@ std::shared_ptr<ob::StreamProfileList> configureDepthStream(ob::Pipeline &pipeli
                 depthProfile = depthProfileList->getProfile(OB_PROFILE_DEFAULT);
                 std::cout << "Using default depth profile." << std::endl;
             }
-            // Configure the depth stream explicitly
-            depthProfile = depthProfileList->getVideoStreamProfile(640, 576, OB_FORMAT_Y16, 30);
+            
 
             if (!depthProfile) {
                 std::cerr << "Unable to find the requested depth stream profile: 640x576, 30 fps, Y16 format!" << std::endl;

@@ -123,7 +123,8 @@ struct Voxel {
 
 // Function prototypes
 uint32_t transformCropAndVoxelize(std::vector<OBColorPoint>& points, float* point_cloud_out);
-uint32_t transformCropAndVoxelizeCenter(std::vector<OBColorPoint>& points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR);
+// uint32_t transformCropAndVoxelizeCenter(std::vector<OBColorPoint>& points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR);
+uint32_t transformCropAndVoxelizeCenter(OBColorPoint* points, size_t num_points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR);
 
 #endif
 

@@ -1,0 +1,8 @@
+export CC=$(which gcc)
+export CXX=$(which g++)
+
+export CMAKE_PREFIX_PATH=$CONDA_PREFIX
+
+
+export C_INCLUDE_PATH=/usr/include/eigen3:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=/usr/include/eigen3:$CPLUS_INCLUDE_PATH

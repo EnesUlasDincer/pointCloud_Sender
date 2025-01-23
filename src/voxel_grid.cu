@@ -113,9 +113,10 @@ struct TFAndCropPoint {
     Point operator()(const Point p) const {
 
         Point np;
-        np.x = tf(0, 0) * p.x + tf(0, 1) * p.y + tf(0, 2) * p.z + tf(0, 3);
-        np.y = tf(1, 0) * p.x + tf(1, 1) * p.y + tf(1, 2) * p.z + tf(1, 3);
-        np.z = tf(2, 0) * p.x + tf(2, 1) * p.y + tf(2, 2) * p.z + tf(2, 3);
+
+        np.x = tf(0, 0) * p.x + tf(0, 1) * p.y + tf(0, 2) * p.z + tf(0, 3); 
+        np.y = tf(1, 0) * p.x + tf(1, 1) * p.y + tf(1, 2) * p.z + tf(1, 3); 
+        np.z = tf(2, 0) * p.x + tf(2, 1) * p.y + tf(2, 2) * p.z + tf(2, 3); 
         np.r = p.r;
         np.g = p.g;
         np.b = p.b;
@@ -126,7 +127,7 @@ struct TFAndCropPoint {
             // printf("Invalid point: (%f, %f, %f)\n", p.x, p.y, p.z);
             return Point(NAN, NAN, NAN, 0, 0, 0);
         }
-        // printf("Transformed point: (%f, %f, %f)\n", np.x, np.y, np.z);
+    
         return np;
     }
 };
@@ -135,20 +136,20 @@ uint32_t voxel_grid(thrust::device_vector<Point>& d_points, float* out, const ui
     uint32_t num = d_points.size();
 
     // Step 1: Map points to colors and voxel indices
-    std::cout << "Step 1: Map points to colors and voxel indices" << std::endl;
+    // std::cout << "Step 1: Map points to colors and voxel indices" << std::endl;
     thrust::device_vector<ui64RGB> d_colors(num);
     thrust::device_vector<uint32_t> d_voxel_idxs(num);
     thrust::transform(d_points.begin(), d_points.end(), d_colors.begin(), PointToColor());
     thrust::transform(d_points.begin(), d_points.end(), d_voxel_idxs.begin(), PointToKey(voxel_nums, voxel_lengths, min_xyz));
 
     // Step 2: Sort points by voxel index
-    std::cout << "Step 2: Sort points by voxel index" << std::endl;
+    // std::cout << "Step 2: Sort points by voxel index" << std::endl;
     thrust::device_vector<uint32_t> d_point_idxs(num);
     thrust::sequence(d_point_idxs.begin(), d_point_idxs.end());
     thrust::sort_by_key(d_voxel_idxs.begin(), d_voxel_idxs.end(), d_point_idxs.begin());
 
     // Step 3: Compute voxel histogram
-    std::cout << "Step 3: Compute voxel histogram" << std::endl;
+    // std::cout << "Step 3: Compute voxel histogram" << std::endl;
     thrust::device_vector<uint32_t> d_weights(num);
     thrust::device_vector<uint32_t> d_idx_reduced(num);
     auto new_ends = thrust::reduce_by_key(d_voxel_idxs.begin(), d_voxel_idxs.end(),
@@ -159,26 +160,26 @@ uint32_t voxel_grid(thrust::device_vector<Point>& d_points, float* out, const ui
     d_idx_reduced.resize(num_voxels);
 
     // Step 4: Aggregate voxel colors
-    std::cout << "Step 4: Aggregate voxel colors" << std::endl;
+    // std::cout << "Step 4: Aggregate voxel colors" << std::endl;
     thrust::device_vector<ui64RGB> d_colors_out(num_voxels);
     thrust::reduce_by_key(d_voxel_idxs.begin(), d_voxel_idxs.end(),
                           thrust::make_permutation_iterator(d_colors.begin(), d_point_idxs.begin()),
                           d_idx_reduced.begin(), d_colors_out.begin());
 
     // Step 5: Compute voxel centroids
-    std::cout << "Step 5: Compute voxel centroids" << std::endl;
+    // std::cout << "Step 5: Compute voxel centroids" << std::endl;
     thrust::device_vector<Point> d_point_cloud_out(num_voxels);
     auto zip_begin = thrust::make_zip_iterator(thrust::make_tuple(d_idx_reduced.begin(), d_colors_out.begin(), d_weights.begin()));
     auto zip_end = thrust::make_zip_iterator(thrust::make_tuple(d_idx_reduced.end(), d_colors_out.end(), d_weights.end()));
     
-    std::cout << "transforming" << std::endl;
+    // std::cout << "transforming" << std::endl;
     thrust::transform(zip_begin, zip_end, d_point_cloud_out.begin(), IdxColorWeightToPoint(voxel_nums, voxel_lengths, min_xyz));
 
     // Copy result to output
-    std::cout << "Copying result to output" << std::endl;
+    // std::cout << "Copying result to output" << std::endl;
     thrust::copy(d_point_cloud_out.begin(), d_point_cloud_out.end(), reinterpret_cast<Point*>(out));
 
-    std::cout << "Number of voxels: " << num_voxels << std::endl;
+    // std::cout << "Number of voxels: " << num_voxels << std::endl;
     return num_voxels;
 }
 
@@ -192,59 +193,103 @@ uint32_t voxel_grid(thrust::device_vector<Point>& d_points, float* out, const ui
         }                                                              \
     } while (0)
 
-uint32_t transformCropAndVoxelizeCenter(std::vector<OBColorPoint>& points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR) {
-    size_t num_points = points.size();
+// uint32_t transformCropAndVoxelizeCenter(std::vector<OBColorPoint>& points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR) {
+//     size_t num_points = points.size();
+//     if (num_points == 0) {
+//         std::cerr << "Error: No input points\n";
+//         return 0;
+//     }
+
+//     fXYZ min_xyz(-300.0f, -300.0f, -500.0f);
+//     fXYZ max_xyz(+130.0f, +130.0f, 2000.0f);
+//     fXYZ voxel_lengths( 1, 1, 1);
+//     ui32XYZ voxel_nums(ceil((max_xyz.x - min_xyz.x) / voxel_lengths.x),
+//                        ceil((max_xyz.y - min_xyz.y) / voxel_lengths.y),
+//                        ceil((max_xyz.z - min_xyz.z) / voxel_lengths.z));
+
+//     Eigen::Matrix4f tf;
+//     //  = T_camera_to_QR;
+//     // printf("T_camera_to_QR: \n");
+//     // std::cout << T_camera_to_QR << std::endl;
+//     tf << 1, 0, 0, 0,
+//           0, 1, 0, 0,
+//           0, 0, 1, 0,
+//           0, 0, 0, 1;
+
+
+//     // thrust::host_vector<Point> h_points(num_points);
+//     // for (size_t i = 0; i < num_points; ++i) {
+//     //     h_points[i] = toPoint(points[i]);
+//     // }
+
+//     // thrust::device_vector<Point> d_points = h_points;
+
+//     thrust::device_vector<Point> d_points(points.size()); // Output
+//     thrust::copy(
+//         reinterpret_cast<const Point*>(&points[0]),
+//         reinterpret_cast<const Point*>(&points[0] + points.size()),
+//         d_points.begin());
+
+
+//     // std
+//     std::cout << "Number of points before filtering: " << d_points.size() << std::endl;
+
+//     thrust::transform(d_points.begin(), d_points.end(), d_points.begin(), TFAndCropPoint(tf, min_xyz, max_xyz));
+    
+//     CUDA_CHECK(cudaDeviceSynchronize());
+
+
+//     size_t new_size = thrust::remove_if(d_points.begin(), d_points.end(), is_point_invalid()) - d_points.begin();
+//     if (new_size > d_points.size()) {
+//         std::cerr << "Error: new_size exceeds original size\n";
+//         exit(EXIT_FAILURE);
+//     }
+//     d_points.resize(new_size);
+
+//     CUDA_CHECK(cudaDeviceSynchronize());
+
+//     std::cout << "Number of points after filtering: " << new_size << std::endl;
+//     return voxel_grid(d_points, point_cloud_out, voxel_nums, voxel_lengths, min_xyz);
+// }
+
+
+uint32_t transformCropAndVoxelizeCenter(OBColorPoint* points, size_t num_points, float* point_cloud_out, Eigen::Matrix4f& T_camera_to_QR) {
     if (num_points == 0) {
         std::cerr << "Error: No input points\n";
         return 0;
     }
 
     fXYZ min_xyz(-300.0f, -300.0f, -500.0f);
-    fXYZ max_xyz(+130.0f, +130.0f, 500.0f);
-    fXYZ voxel_lengths( 1, 1, 1);
-    ui32XYZ voxel_nums(ceil((max_xyz.x - min_xyz.x) / voxel_lengths.x),
-                       ceil((max_xyz.y - min_xyz.y) / voxel_lengths.y),
-                       ceil((max_xyz.z - min_xyz.z) / voxel_lengths.z));
+    fXYZ max_xyz(+600.0f, +600.0f, 3000.0f);
+    fXYZ voxel_lengths(1, 1, 1);
+    ui32XYZ voxel_nums(
+        ceil((max_xyz.x - min_xyz.x) / voxel_lengths.x),
+        ceil((max_xyz.y - min_xyz.y) / voxel_lengths.y),
+        ceil((max_xyz.z - min_xyz.z) / voxel_lengths.z));
 
-    Eigen::Matrix4f tf = T_camera_to_QR;
-    // printf("T_camera_to_QR: \n");
-    std::cout << T_camera_to_QR << std::endl;
-    // tf << 0, 1, 0, 0,
-    //       1, 0, 0, 0,
+    Eigen::Matrix4f tf = T_camera_to_QR;  // Use input transform
+    // Eigen::Matrix4f tf;  // Use input transform
+    // tf << 1, 0, 0, 0,
+    //       0, 1, 0, 0,
     //       0, 0, 1, 0,
     //       0, 0, 0, 1;
 
-
-    // thrust::host_vector<Point> h_points(num_points);
-    // for (size_t i = 0; i < num_points; ++i) {
-    //     h_points[i] = toPoint(points[i]);
-    // }
-
-    // thrust::device_vector<Point> d_points = h_points;
-
-    thrust::device_vector<Point> d_points(points.size()); // Output
+    // CUDA THRUST - NO COPYING TO `std::vector`
+    thrust::device_vector<Point> d_points(num_points);
     thrust::copy(
-        reinterpret_cast<const Point*>(&points[0]),
-        reinterpret_cast<const Point*>(&points[0] + points.size()),
+        reinterpret_cast<const Point*>(points),
+        reinterpret_cast<const Point*>(points) + num_points,
         d_points.begin());
 
-
-    // std
-    std::cout << "Number of points before filtering: " << d_points.size() << std::endl;
+    // std::cout << "Number of points before filtering: " << d_points.size() << std::endl;
 
     thrust::transform(d_points.begin(), d_points.end(), d_points.begin(), TFAndCropPoint(tf, min_xyz, max_xyz));
-    
-    CUDA_CHECK(cudaDeviceSynchronize());
-
+    // CUDA_CHECK(cudaDeviceSynchronize());
 
     size_t new_size = thrust::remove_if(d_points.begin(), d_points.end(), is_point_invalid()) - d_points.begin();
-    if (new_size > d_points.size()) {
-        std::cerr << "Error: new_size exceeds original size\n";
-        exit(EXIT_FAILURE);
-    }
     d_points.resize(new_size);
 
-    CUDA_CHECK(cudaDeviceSynchronize());
+    // CUDA_CHECK(cudaDeviceSynchronize());
 
     std::cout << "Number of points after filtering: " << new_size << std::endl;
     return voxel_grid(d_points, point_cloud_out, voxel_nums, voxel_lengths, min_xyz);

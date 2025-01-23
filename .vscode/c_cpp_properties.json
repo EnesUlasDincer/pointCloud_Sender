@@ -4,8 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/enes/Desktop/PhD/Repos/eigen",
-                "/home/enes/Desktop/ORBBEC/OrbbecSDK/include"
+                //"/home/enesud/Desktop/Repos/eigen",
+                "/home/enesud/Desktop/Repos/OrbbecSDK/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
