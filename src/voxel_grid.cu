@@ -259,8 +259,8 @@ uint32_t transformCropAndVoxelizeCenter(OBColorPoint* points, size_t num_points,
         return 0;
     }
 
-    fXYZ min_xyz(-300.0f, -300.0f, -500.0f);
-    fXYZ max_xyz(+600.0f, +600.0f, 3000.0f);
+    fXYZ min_xyz(-3000.0f, -3000.0f, -1000.0f);
+    fXYZ max_xyz(+6000.0f, +6000.0f, 5000.0f);
     fXYZ voxel_lengths(1, 1, 1);
     ui32XYZ voxel_nums(
         ceil((max_xyz.x - min_xyz.x) / voxel_lengths.x),

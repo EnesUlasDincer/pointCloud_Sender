@@ -177,11 +177,11 @@ int main(int argc, char **argv) try {
 
 
     // Path to the file
-    // std::string filePath_T_camera_to_QR = "/home/enes/Desktop/ORBBEC/Orbbec_Codes/JPG_taker/build/Cam_1_pose_estimation.txt";
-    // // Read T_camera_to_QR matrix
-    // Eigen::Matrix4f T_camera_to_QR = readTransformationMatrix(filePath_T_camera_to_QR);
+    std::string filePath_T_camera_to_QR = "/home/enesud/Desktop/Orbbec_codes/Orbbec_Codes/JPG_taker/build/Cam_1_pose_estimation.txt";
+    // Read T_camera_to_QR matrix
+    Eigen::Matrix4f T_camera_to_QR = readTransformationMatrix(filePath_T_camera_to_QR);
 
-    Eigen::Matrix4f T_camera_to_QR = Eigen::Matrix4f::Identity();
+    // Eigen::Matrix4f T_camera_to_QR = Eigen::Matrix4f::Identity();
 
     // Print the transformation matrix
     std::cout << "Transformation Matrix (T_camera_to_QR):" << std::endl;
